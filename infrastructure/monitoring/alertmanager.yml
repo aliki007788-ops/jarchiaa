@@ -1,0 +1,15 @@
+global:
+slack_api_url: 'https://hooks.slack.com/services/xxx'
+
+route:
+group_by: ['alertname']
+receiver: 'default'
+
+receivers:
+
+name: 'default'
+slack_configs:
+
+channel: '#alerts'
+
+

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: vitrin-service
+namespace: jarchia
+spec:
+replicas: 3
+selector:
+matchLabels:
+app: vitrin-service
+template:
+metadata:
+labels:
+app: vitrin-service
+spec:
+containers:
+- name: vitrin-service
+image: jarchia/vitrin-service:latest
+ports:
+- containerPort: 8090
+
+

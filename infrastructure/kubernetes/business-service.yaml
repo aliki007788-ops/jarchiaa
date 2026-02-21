@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: business-service
+namespace: jarchia
+spec:
+replicas: 2
+selector:
+matchLabels:
+app: business-service
+template:
+metadata:
+labels:
+app: business-service
+spec:
+containers:
+- name: business-service
+image: jarchia/business-service:latest
+ports:
+- containerPort: 8082
+
+

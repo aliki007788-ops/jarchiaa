@@ -1,0 +1,13 @@
+{
+"dashboard": {
+"title": "Jarchia Platform",
+"panels": [
+{
+"title": "API Request Rate",
+"type": "graph"
+}
+]
+}
+}
+
+
