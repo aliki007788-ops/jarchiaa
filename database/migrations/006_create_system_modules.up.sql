@@ -1,0 +1,8 @@
+CREATE TABLE system_modules (
+id VARCHAR(50) PRIMARY KEY,
+key VARCHAR(50) UNIQUE NOT NULL,
+name_fa VARCHAR(100) NOT NULL,
+is_active BOOLEAN DEFAULT TRUE
+);
+
+
