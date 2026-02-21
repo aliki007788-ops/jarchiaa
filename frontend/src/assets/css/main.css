@@ -1,0 +1,21 @@
+{
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: 'IRANSans', sans-serif;
+background: #0A0A0A;
+color: #F5E6D3;
+direction: rtl;
+}
+
+.mobile-view {
+max-width: 428px;
+margin: 0 auto;
+background: #0F0F0F;
+min-height: 100vh;
+}
+
+

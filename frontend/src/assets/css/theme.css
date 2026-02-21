@@ -1,0 +1,18 @@
+:root {
+--gold-primary: #D4AF37;
+--gold-secondary: #B8860B;
+--bg-primary: #0A0A0A;
+--bg-secondary: #0F0F0F;
+--bg-tertiary: #1A1A1A;
+--text-primary: #F5E6D3;
+--text-secondary: #B8860B;
+}
+
+body.light-mode {
+--bg-primary: #f5f5f5;
+--bg-secondary: #ffffff;
+--text-primary: #2d3436;
+--gold-primary: #6c5ce7;
+}
+
+
