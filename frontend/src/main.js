@@ -1,9 +1,6 @@
 // frontend/src/main.js
+// ایمپورت فایل اصلی
 import './assets/js/main.js';
-import './assets/css/main.css';
 
-// اگه از Vue استفاده می‌کنی
-import { createApp } from 'vue'
-import App from './App.vue'
-
-createApp(App).mount('#app')
+// یه پیام برای اطمینان
+console.log('✅ جارچیا با موفقیت لود شد');
