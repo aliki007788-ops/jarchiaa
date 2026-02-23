@@ -1,12 +1,9 @@
-// main.js
-import './assets/js/main.js';
-import './assets/css/main.css';
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
 
-// اگه از Vue استفاده می‌کنی
-import { createApp } from 'vue';
-import App from './App.vue';
+const app = createApp(App)
+app.use(router)
+app.mount('#app')
 
-const app = createApp(App);
-app.mount('#app');
-
-console.log('جارچیا با موفقیت راه‌اندازی شد!');
+console.log('جارچیا با موفقیت راه‌اندازی شد!')
