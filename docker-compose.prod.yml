@@ -7,28 +7,383 @@ services:
       - "8080:8080"
     deploy:
       replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - USER_SERVICE_URL=http://user-service:8081
+      - BUSINESS_SERVICE_URL=http://business-service:8082
+      - AD_SERVICE_URL=http://ad-service:8083
+      - GEO_SERVICE_URL=http://geo-service:8084
+      - PAYMENT_SERVICE_URL=http://payment-service:8085
     networks:
       - jarchia-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   user-service:
     image: ghcr.io/jarchia/user-service:latest
     deploy:
       replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     networks:
       - jarchia-network
+    depends_on:
+      - postgres
+      - redis
 
+  business-service:
+    image: ghcr.io/jarchia/business-service:latest
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+      - minio
+
+  ad-service:
+    image: ghcr.io/jarchia/ad-service:latest
+    deploy:
+      replicas: 2
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+
+  geo-service:
+    image: ghcr.io/jarchia/geo-service:latest
+    deploy:
+      replicas: 2
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - NESHAN_API_KEY=${NESHAN_API_KEY}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+
+  payment-service:
+    image: ghcr.io/jarchia/payment-service:latest
+    deploy:
+      replicas: 2
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ZARINPAL_MERCHANT_ID=${ZARINPAL_MERCHANT_ID}
+      - IDPAY_API_KEY=${IDPAY_API_KEY}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+      - redis
+
+  notification-service:
+    image: ghcr.io/jarchia/notification-service:latest
+    deploy:
+      replicas: 2
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - KAVENEGAR_API_KEY=${KAVENEGAR_API_KEY}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+
+  analytics-service:
+    image: ghcr.io/jarchia/analytics-service:latest
+    deploy:
+      replicas: 1
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+
+  eitaa-bridge-service:
+    image: ghcr.io/jarchia/eitaa-bridge-service:latest
+    deploy:
+      replicas: 1
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - EITAA_BOT_TOKEN=${EITAA_BOT_TOKEN}
+      - EITAA_CLIENT_ID=${EITAA_CLIENT_ID}
+      - EITAA_CLIENT_SECRET=${EITAA_CLIENT_SECRET}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+
+  admin-service:
+    image: ghcr.io/jarchia/admin-service:latest
+    deploy:
+      replicas: 1
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+
+  vitrin-service:
+    image: ghcr.io/jarchia/vitrin-service:latest
+    deploy:
+      replicas: 2
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=jarchia
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - jarchia-network
+    depends_on:
+      - postgres
+      - redis
+
+  frontend:
+    image: ghcr.io/jarchia/frontend:latest
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    environment:
+      - VITE_API_URL=http://api-gateway:8080
+    networks:
+      - jarchia-network
+    depends_on:
+      - api-gateway
+
+  # ===== زیرساخت =====
   postgres:
     image: postgis/postgis:15-3.4
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./backups:/backups
+    environment:
+      - POSTGRES_DB=jarchia
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
     networks:
       - jarchia-network
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+      placement:
+        constraints:
+          - node.role == manager
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - jarchia-network
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    networks:
+      - jarchia-network
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ===== مانیتورینگ =====
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - jarchia-network
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - jarchia-network
+    ports:
+      - "3001:3000"
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  # ===== پشتیبان‌گیری =====
+  backup:
+    image: prodrigestivill/postgres-backup-local
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=jarchia
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - SCHEDULE=@daily
+      - BACKUP_DIR=/backups
+      - BACKUP_SUFFIX=jarchia_%Y%m%d.sql.gz
+      - HEALTHCHECK_PORT=8080
+    volumes:
+      - ./backups:/backups
+    networks:
+      - jarchia-network
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
 
 networks:
   jarchia-network:
     driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
 
 volumes:
   postgres-data:
-
-
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
