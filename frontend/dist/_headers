@@ -1,0 +1,2 @@
+/*
+  Content-Security-Policy: default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.fontcdn.ir; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.fontcdn.ir; font-src 'self' https://cdn.fontcdn.ir https://cdnjs.cloudflare.com; connect-src 'self' https://jarchiaa.onrender.com wss://jarchiaa.onrender.com;

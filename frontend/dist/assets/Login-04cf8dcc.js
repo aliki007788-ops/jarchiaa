@@ -1,0 +1,1 @@
+import{_ as t,o as s,c as _,a as o}from"./index-8ce3281e.js";const a={name:"Login"},r={class:"login"};function i(n,e,p,c,d,l){return s(),_("div",r,[e[1]||(e[1]=o("h1",null,"ورود به حساب",-1)),o("button",{onClick:e[0]||(e[0]=f=>n.$router.push("/"))},"بازگشت")])}const $=t(a,[["render",i],["__scopeId","data-v-ff28b675"]]);export{$ as default};
