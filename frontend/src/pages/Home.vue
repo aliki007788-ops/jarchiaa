@@ -1,31 +1,33 @@
 <template>
-  <div class="home">
-    <h1>به جارچیا خوش آمدید</h1>
-    <p>این صفحه اصلی است</p>
-    <button @click="$router.push('/login')">ورود</button>
+  <div class="home-page">
+    <div class="stories-section">
+      <h3>داستان‌های امروز</h3>
+      <div class="stories-container">
+        <div class="story-item">
+          <div class="story-ring"><i class="fas fa-plus"></i></div>
+          <span>شما</span>
+        </div>
+      </div>
+    </div>
+    <div class="ads-section">
+      <h3>آگهی‌های نزدیک شما</h3>
+      <div class="ads-container"></div>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Home'
+  name: 'HomePage'
 }
 </script>
 
 <style scoped>
-.home {
+.home-page {
   padding: 20px;
-  text-align: center;
 }
-h1 {
-  color: #42b983;
-}
-button {
-  padding: 10px 20px;
-  background: #42b983;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+h3 {
+  color: #D4AF37;
+  margin-bottom: 15px;
 }
 </style>
