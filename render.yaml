@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: jarchiaa
+    runtime: node
+    buildCommand: npm install -g pnpm && pnpm install && pnpm run build
+    startCommand: cd frontend && npx serve -s dist
+    publishPath: frontend/dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
