@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="login-container">
     <div class="login-logo">جارچیا</div>
     
@@ -12,6 +12,9 @@
           v-model="phone" 
           placeholder="9120000000" 
           maxlength="10"
+          pattern="[0-9]*"
+          inputmode="numeric"
+          @keypress="isNumber"
           @keyup.enter="sendOTP"
         >
       </div>
@@ -48,7 +51,8 @@
         تأیید و ورود
       </button>
       
-      <div class="resend" @click="resendOTP">
+      <div class="timer" v-if="timer > 0">{{ formatTimer(timer) }}</div>
+      <div class="resend" @click="resendOTP" v-else>
         ارسال مجدد کد
       </div>
     </div>
@@ -83,7 +87,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useAuth } from '../composables/useAuth'
 import { useRouter } from 'vue-router'
 
@@ -97,6 +101,8 @@ export default {
     const otp = ref(['', '', '', '', '', ''])
     const fullName = ref('')
     const email = ref('')
+    const timer = ref(0)
+    let timerInterval = null
     
     const isPhoneValid = computed(() => {
       return phone.value.length === 10
@@ -106,10 +112,19 @@ export default {
       return otp.value.every(digit => digit && digit.length === 1)
     })
     
+    // فقط اعداد مجاز باشن
+    const isNumber = (evt) => {
+      const charCode = evt.which ? evt.which : evt.keyCode
+      if (charCode < 48 || charCode > 57) {
+        evt.preventDefault()
+      }
+    }
+    
     const sendOTP = async () => {
       try {
         await login(phone.value)
         step.value = 'otp'
+        startTimer(120) // 2 دقیقه تایمر
       } catch (error) {
         alert('خطا در ارسال کد')
       }
@@ -119,27 +134,72 @@ export default {
       const code = otp.value.join('')
       try {
         const response = await verify(phone.value, code)
-        if (response.user.isVerified) {
-          router.push('/')
+        
+        // ✅ ذخیره اطلاعات کاربر در localStorage
+        if (response && response.token) {
+          localStorage.setItem('token', response.token)
+          
+          if (response.user) {
+            localStorage.setItem('userRole', response.user.role || 'user')
+            localStorage.setItem('userName', response.user.full_name || response.user.name || 'کاربر')
+            localStorage.setItem('userPhone', response.user.phone || phone.value)
+            localStorage.setItem('userId', response.user.id || '')
+          }
+          
+          // اگه کاربر تأیید شده بود بره خانه، وگرنه بره ثبت‌نام
+          if (response.user?.isVerified) {
+            router.push('/')
+          } else {
+            step.value = 'register'
+          }
         } else {
-          step.value = 'register'
+          alert('خطا در ورود به سیستم')
         }
       } catch (error) {
+        console.error('Verify error:', error)
         alert('کد نامعتبر است')
       }
     }
     
     const completeRegistration = async () => {
       try {
-        await register({
+        const response = await register({
           phone: phone.value,
           fullName: fullName.value,
           email: email.value
         })
+        
+        // ✅ بعد از ثبت‌نام کامل، دوباره اطلاعات رو ذخیره کن
+        if (response && response.token) {
+          localStorage.setItem('token', response.token)
+          localStorage.setItem('userRole', response.user?.role || 'user')
+          localStorage.setItem('userName', fullName.value)
+          localStorage.setItem('userPhone', phone.value)
+        }
+        
         router.push('/')
       } catch (error) {
         alert('خطا در ثبت‌نام')
       }
+    }
+    
+    const startTimer = (seconds) => {
+      timer.value = seconds
+      if (timerInterval) clearInterval(timerInterval)
+      
+      timerInterval = setInterval(() => {
+        if (timer.value > 0) {
+          timer.value--
+        } else {
+          clearInterval(timerInterval)
+        }
+      }, 1000)
+    }
+    
+    const formatTimer = (seconds) => {
+      const mins = Math.floor(seconds / 60)
+      const secs = seconds % 60
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`
     }
     
     const moveToNext = (event, index) => {
@@ -160,20 +220,28 @@ export default {
       await sendOTP()
     }
     
+    // پاکسازی تایمر موقع خروج از کامپوننت
+    onUnmounted(() => {
+      if (timerInterval) clearInterval(timerInterval)
+    })
+    
     return {
       step,
       phone,
       otp,
       fullName,
       email,
+      timer,
       isPhoneValid,
       isOTPValid,
+      isNumber,
       sendOTP,
       verifyOTP,
       completeRegistration,
       moveToNext,
       moveToPrev,
-      resendOTP
+      resendOTP,
+      formatTimer
     }
   }
 }
@@ -210,6 +278,7 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.5rem;
+  z-index: 2;
 }
 
 .input-box .prefix {
@@ -220,6 +289,7 @@ export default {
   color: rgba(212, 175, 55, 0.6);
   border-right: 1px solid rgba(212, 175, 55, 0.2);
   padding-right: 10px;
+  z-index: 2;
 }
 
 .input-box input {
@@ -234,6 +304,11 @@ export default {
   text-align: left;
 }
 
+.input-box input:focus {
+  border-color: #D4AF37;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
 .main-btn {
   width: 100%;
   padding: 18px;
@@ -246,11 +321,17 @@ export default {
   cursor: pointer;
   box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
   margin-bottom: 15px;
+  transition: transform 0.3s;
+}
+
+.main-btn:hover {
+  transform: translateY(-2px);
 }
 
 .main-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .otp-container {
@@ -269,6 +350,19 @@ export default {
   color: #D4AF37;
   font-size: 24px;
   text-align: center;
+  outline: none;
+}
+
+.otp-input:focus {
+  border-width: 2px;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+.timer {
+  text-align: center;
+  color: #B8860B;
+  font-size: 18px;
+  margin: 15px 0;
 }
 
 .resend {
@@ -276,5 +370,10 @@ export default {
   color: #D4AF37;
   cursor: pointer;
   margin-top: 20px;
+  text-decoration: underline;
+}
+
+.resend:hover {
+  color: #B8860B;
 }
 </style>
