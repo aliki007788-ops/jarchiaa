@@ -8,6 +8,7 @@ import (
     "user-service/repository"
     "github.com/golang-jwt/jwt/v5"
     "golang.org/x/crypto/bcrypt"
+        "github.com/google/uuid"  
 )
 
 type AuthService struct {
@@ -146,4 +147,5 @@ func (s *AuthService) GetUserFromToken(tokenString string) (*models.User, error)
     
     userID, _ := uuid.Parse(claims["user_id"].(string))
     return s.userRepo.FindByID(userID)
+
 }
