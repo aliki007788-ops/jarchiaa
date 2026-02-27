@@ -1,8 +1,12 @@
-import './assets/css/main.css';
-import { initRouter } from './router.js';
-import { loadUserData } from './services/user.js';
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import { store } from './store'
+import './assets/css/main.css'
 
-window.onload = () => {
-    initRouter();
-    loadUserData();
-};
+const app = createApp(App)
+app.use(router)
+app.provide('store', store)
+app.mount('#app')
+
+console.log('✅ جارچیا با موفقیت راه‌اندازی شد')
