@@ -1,10 +1,8 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-import './assets/css/main.css'
+import './assets/css/main.css';
+import { initRouter } from './router.js';
+import { loadUserData } from './services/user.js';
 
-const app = createApp(App)
-app.use(router)
-app.mount('#app')
-
-console.log('✅ جارچیا با موفقیت راه‌اندازی شد!')
+window.onload = () => {
+    initRouter();
+    loadUserData();
+};
