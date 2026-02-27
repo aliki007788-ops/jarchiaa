@@ -1,4 +1,4 @@
- <template>
+<template>
   <div id="app" class="mobile-view">
     <!-- ذرات درخشان (فقط در لاگین) -->
     <div class="particles-container" :class="{active: $route.path === '/login'}">
@@ -6,8 +6,8 @@
            :style="getParticleStyle()"></div>
     </div>
     
-    <!-- هدر -->
-    <header class="header">
+    <!-- هدر - فقط وقتی لاگین هستی نمایش بده -->
+    <header class="header" v-if="isLoggedIn">
       <div class="menu-btn" @click="toggleDrawer">
         <span></span><span></span><span></span>
       </div>
@@ -24,15 +24,15 @@
     <!-- صفحه اصلی -->
     <router-view></router-view>
 
-    <!-- ناوبری پایین (فقط در صفحات اصلی) -->
-    <BottomNav v-if="!isLoginPage" />
+    <!-- ناوبری پایین (فقط در صفحات اصلی و وقتی لاگین هستی) -->
+    <BottomNav v-if="!isLoginPage && isLoggedIn" />
   </div>
 </template>
 
 <script>
 import BottomNav from './components/BottomNav.vue'
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useStore } from './store'
 
 export default {
@@ -40,15 +40,41 @@ export default {
   components: { BottomNav },
   setup() {
     const route = useRoute()
+    const router = useRouter()
     const store = useStore()
     
     const isLoginPage = computed(() => route.path === '/login')
     
-    const toggleDrawer = () => store.commit('toggleDrawer')
+    // بررسی لاگین بودن کاربر
+    const isLoggedIn = computed(() => {
+      return !!localStorage.getItem('token')
+    })
+    
+    const toggleDrawer = () => {
+      if (isLoggedIn.value) {
+        store.commit('toggleDrawer')
+      }
+    }
+    
     const toggleTheme = () => store.commit('toggleTheme')
-    const switchRole = () => store.dispatch('switchRole')
-    const showNotifications = () => alert('۳ اعلان جدید')
-    const showSearch = () => alert('جستجو')
+    
+    const switchRole = () => {
+      if (isLoggedIn.value) {
+        store.dispatch('switchRole')
+      }
+    }
+    
+    const showNotifications = () => {
+      if (isLoggedIn.value) {
+        alert('۳ اعلان جدید')
+      }
+    }
+    
+    const showSearch = () => {
+      if (isLoggedIn.value) {
+        alert('جستجو')
+      }
+    }
 
     // ذرات درخشان
     const getParticleClass = () => Math.random() > 0.5 ? 'gold' : 'white'
@@ -60,10 +86,21 @@ export default {
       animationDelay: -(Math.random() * 10) + 's'
     })
 
+    // اگه توکن نبود و صفحه لاگین نیست، بفرست به لاگین
+    if (!isLoggedIn.value && !isLoginPage.value) {
+      router.push('/login')
+    }
+
     return { 
-      toggleDrawer, toggleTheme, switchRole, 
-      showNotifications, showSearch, isLoginPage,
-      getParticleClass, getParticleStyle
+      toggleDrawer, 
+      toggleTheme, 
+      switchRole, 
+      showNotifications, 
+      showSearch, 
+      isLoginPage,
+      isLoggedIn,
+      getParticleClass, 
+      getParticleStyle
     }
   }
 }
