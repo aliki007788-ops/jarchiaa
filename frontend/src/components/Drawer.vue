@@ -73,7 +73,7 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
@@ -87,14 +87,20 @@ export default {
   setup(props, { emit }) {
     const router = useRouter()
     
-    // دریافت نقش کاربر از localStorage
-    const userRole = computed(() => {
-      const role = localStorage.getItem('userRole')
-      console.log('Current user role:', role) // برای دیباگ
-      return role || 'guest'
+    // دریافت نقش کاربر از localStorage با رفرش لحظه‌ای
+    const userRole = ref('guest')
+    const userName = ref('کاربر')
+    
+    // آپدیت نقش هر بار که منو باز میشه
+    onMounted(() => {
+      updateUserInfo()
     })
     
-    const userName = computed(() => localStorage.getItem('userName') || 'کاربر')
+    const updateUserInfo = () => {
+      userRole.value = localStorage.getItem('userRole') || 'guest'
+      userName.value = localStorage.getItem('userName') || 'کاربر'
+      console.log('🔄 نقش کاربر آپدیت شد:', userRole.value)
+    }
     
     const userRoleText = computed(() => {
       switch(userRole.value) {
@@ -114,8 +120,6 @@ export default {
       localStorage.removeItem('token')
       localStorage.removeItem('userRole')
       localStorage.removeItem('userName')
-      localStorage.removeItem('userPhone')
-      localStorage.removeItem('userId')
       router.push('/login')
       emit('close')
     }
