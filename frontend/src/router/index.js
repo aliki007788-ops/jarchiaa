@@ -88,7 +88,7 @@ const routes = [
     name: 'AdDetail',
     component: AdDetailPage,
     meta: { requiresAuth: true, allowedRoles: ['user', 'business', 'admin'] },
-    props: true // ارسال id به کامپوننت به عنوان prop
+    props: true
   },
 
   // ------------------------------------------------------
@@ -181,7 +181,6 @@ const routes = [
   }
 ]
 
-// ========== ایجاد نمونه روتر ==========
 const router = createRouter({
   history: createWebHistory(),
   routes,
@@ -200,18 +199,23 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const userRole = localStorage.getItem('userRole') || 'guest'
   
+  // ✅ نکته اضافه شده: اگه توکن هست و می‌خواد بره لاگین، بفرست به خانه
+  if (to.path === '/login' && token) {
+    next('/')
+    return
+  }
+  
   // اگر صفحه نیاز به لاگین دارد ولی توکن نیست
   if (to.meta.requiresAuth && !token) {
     next({
       path: '/login',
-      query: { redirect: to.fullPath } // ذخیره مسیر برای برگشت بعد از لاگین
+      query: { redirect: to.fullPath }
     })
     return
   }
   
   // اگر صفحه نیاز به نقش خاصی دارد
   if (to.meta.allowedRoles && !to.meta.allowedRoles.includes(userRole)) {
-    // بر اساس نقش فعلی، صفحه مناسب رو نشون بده
     if (userRole === 'admin') {
       next('/admin')
     } else if (userRole === 'business') {
@@ -222,9 +226,7 @@ router.beforeEach((to, from, next) => {
     return
   }
   
-  // اگر همه چیز اوکی بود، برو به صفحه مورد نظر
   next()
 })
 
-// ========== export روتر ==========
 export default router
