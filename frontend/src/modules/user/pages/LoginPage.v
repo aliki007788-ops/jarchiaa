@@ -87,15 +87,14 @@
 </template>
 
 <script>
-import { ref, computed, onUnmounted } from 'vue'
-import { useAuth } from '../composables/useAuth'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
   setup() {
-    const { login, verify, register } = useAuth()
     const router = useRouter()
     
+    // state
     const step = ref('phone')
     const phone = ref('')
     const otp = ref(['', '', '', '', '', ''])
@@ -104,6 +103,7 @@ export default {
     const timer = ref(0)
     let timerInterval = null
     
+    // computed
     const isPhoneValid = computed(() => {
       return phone.value.length === 10
     })
@@ -112,7 +112,7 @@ export default {
       return otp.value.every(digit => digit && digit.length === 1)
     })
     
-    // فقط اعداد مجاز باشن
+    // متدها
     const isNumber = (evt) => {
       const charCode = evt.which ? evt.which : evt.keyCode
       if (charCode < 48 || charCode > 57) {
@@ -122,63 +122,122 @@ export default {
     
     const sendOTP = async () => {
       try {
-        await login(phone.value)
+        console.log('📱 ارسال OTP به شماره:', phone.value)
+        
+        // TODO: اینجا با بک‌اند واقعی ارتباط برقرار کن
+        // const response = await fetch('/api/auth/login', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ phone: phone.value })
+        // })
+        
+        // برای تست (وقتی بک‌اند نداریم)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
         step.value = 'otp'
-        startTimer(120) // 2 دقیقه تایمر
+        startTimer(120)
+        alert(`کد تست: 123456 (برای شماره ${phone.value})`)
+        
       } catch (error) {
-        alert('خطا در ارسال کد')
+        console.error('❌ خطا در ارسال کد:', error)
+        alert('خطا در ارسال کد. لطفاً دوباره تلاش کنید.')
       }
     }
     
     const verifyOTP = async () => {
       const code = otp.value.join('')
+      console.log('✅ تأیید کد:', code, 'برای شماره:', phone.value)
+      
       try {
-        const response = await verify(phone.value, code)
+        // TODO: اینجا با بک‌اند واقعی ارتباط برقرار کن
+        // const response = await fetch('/api/auth/verify', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ phone: phone.value, code: code })
+        // })
+        // const data = await response.json()
         
-        // ✅ ذخیره اطلاعات کاربر در localStorage
-        if (response && response.token) {
-          localStorage.setItem('token', response.token)
-          
-          if (response.user) {
-            localStorage.setItem('userRole', response.user.role || 'user')
-            localStorage.setItem('userName', response.user.full_name || response.user.name || 'کاربر')
-            localStorage.setItem('userPhone', response.user.phone || phone.value)
-            localStorage.setItem('userId', response.user.id || '')
+        // برای تست (وقتی بک‌اند نداریم)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // شبیه‌سازی پاسخ از سرور
+        const mockResponse = {
+          success: true,
+          token: 'mock-jwt-token-' + Date.now(),
+          user: {
+            id: '123',
+            phone: phone.value,
+            full_name: 'کاربر تست',
+            role: 'user',
+            isVerified: true
           }
-          
-          // اگه کاربر تأیید شده بود بره خانه، وگرنه بره ثبت‌نام
-          if (response.user?.isVerified) {
-            router.push('/')
-          } else {
-            step.value = 'register'
-          }
-        } else {
-          alert('خطا در ورود به سیستم')
         }
+        
+        console.log('✅ پاسخ از سرور:', mockResponse)
+        
+        // ذخیره در localStorage
+        localStorage.setItem('token', mockResponse.token)
+        localStorage.setItem('userRole', mockResponse.user.role)
+        localStorage.setItem('userName', mockResponse.user.full_name)
+        localStorage.setItem('userPhone', mockResponse.user.phone)
+        localStorage.setItem('userId', mockResponse.user.id)
+        
+        // بررسی ذخیره‌سازی
+        console.log('💾 ذخیره شد:', {
+          token: localStorage.getItem('token'),
+          role: localStorage.getItem('userRole'),
+          name: localStorage.getItem('userName')
+        })
+        
+        // رفتن به صفحه اصلی
+        router.push('/')
+        
       } catch (error) {
-        console.error('Verify error:', error)
-        alert('کد نامعتبر است')
+        console.error('❌ خطا در تأیید کد:', error)
+        alert('کد تأیید نامعتبر است')
       }
     }
     
     const completeRegistration = async () => {
       try {
-        const response = await register({
-          phone: phone.value,
-          fullName: fullName.value,
-          email: email.value
-        })
+        console.log('📝 تکمیل ثبت‌نام:', { phone: phone.value, fullName: fullName.value, email: email.value })
         
-        // ✅ بعد از ثبت‌نام کامل، دوباره اطلاعات رو ذخیره کن
-        if (response && response.token) {
-          localStorage.setItem('token', response.token)
-          localStorage.setItem('userRole', response.user?.role || 'user')
-          localStorage.setItem('userName', fullName.value)
-          localStorage.setItem('userPhone', phone.value)
+        // TODO: اینجا با بک‌اند واقعی ارتباط برقرار کن
+        // const response = await fetch('/api/auth/register', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ 
+        //     phone: phone.value, 
+        //     fullName: fullName.value, 
+        //     email: email.value 
+        //   })
+        // })
+        
+        // برای تست
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        const mockResponse = {
+          success: true,
+          token: 'mock-jwt-token-' + Date.now(),
+          user: {
+            id: '123',
+            phone: phone.value,
+            full_name: fullName.value,
+            role: 'user',
+            isVerified: true
+          }
         }
         
+        localStorage.setItem('token', mockResponse.token)
+        localStorage.setItem('userRole', mockResponse.user.role)
+        localStorage.setItem('userName', mockResponse.user.full_name)
+        localStorage.setItem('userPhone', mockResponse.user.phone)
+        localStorage.setItem('userId', mockResponse.user.id)
+        
         router.push('/')
+        
       } catch (error) {
+        console.error('❌ خطا در ثبت‌نام:', error)
         alert('خطا در ثبت‌نام')
       }
     }
@@ -220,7 +279,16 @@ export default {
       await sendOTP()
     }
     
-    // پاکسازی تایمر موقع خروج از کامپوننت
+    // بررسی لاگین قبلی
+    onMounted(() => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        console.log('🔓 کاربر قبلاً لاگین کرده بود')
+        router.push('/')
+      }
+    })
+    
+    // پاکسازی تایمر
     onUnmounted(() => {
       if (timerInterval) clearInterval(timerInterval)
     })
@@ -254,6 +322,7 @@ export default {
   flex-direction: column;
   justify-content: center;
   padding: 20px;
+  background: #0A0A0A;
 }
 
 .login-logo {
@@ -302,6 +371,7 @@ export default {
   font-size: 1.2rem;
   outline: none;
   text-align: left;
+  transition: all 0.3s;
 }
 
 .input-box input:focus {
@@ -324,7 +394,7 @@ export default {
   transition: transform 0.3s;
 }
 
-.main-btn:hover {
+.main-btn:hover:not(:disabled) {
   transform: translateY(-2px);
 }
 
@@ -351,6 +421,7 @@ export default {
   font-size: 24px;
   text-align: center;
   outline: none;
+  transition: all 0.3s;
 }
 
 .otp-input:focus {
@@ -371,6 +442,7 @@ export default {
   cursor: pointer;
   margin-top: 20px;
   text-decoration: underline;
+  transition: color 0.3s;
 }
 
 .resend:hover {
